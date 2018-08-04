@@ -1,0 +1,166 @@
+---
+title: Donate
+layout: default
+lang: en
+order: 10
+---
+
+<style type="text/css">
+  button {
+    user-select: none;
+    display: inline-block;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1.5rem;
+    font-size: 1rem;
+    padding: .25rem .75rem;
+    min-width: 2rem;
+    background: 0 0;
+    text-shadow: none;
+    border: 0;
+    border-radius: .25rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color .24s ease 0s;
+
+    box-shadow: inset 0 -3px 0 0 rgba(10,10,10,.24), inset 0 0 0 1px rgba(10,10,10,.24);
+
+    background-color: #d33a2c;
+    background-image: linear-gradient(to bottom,#f88040,#d33a2c);
+    color:white;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(50,50,93,.1), 0 3px 6px rgba(0,0,0,.08);
+    filter: brightness(130%);
+  }
+
+  .button--large {
+   /* font-size: 1.8rem;
+    line-height: 2.5rem;*/
+  }
+
+  .donation {
+    margin: 3rem 0;
+  }
+  .currency {
+    padding-right: 5px;
+    font-weight: bold;
+    font-size: 1.5rem;
+  }
+
+  #donateAmount {
+    height: 50px;
+    margin: 0;
+    padding: 10px;
+    font-size: 1.5rem;
+    width: 100px;
+  }
+
+ 
+ .loading:after {
+    content: "";
+    display: block;
+    margin: auto;
+    height: 36px;
+    width: 36px;
+    animation: b .8s infinite cubic-bezier(.45,.05,.55,.95);
+ }
+
+.loading:after {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cdefs%3E%3Cstyle%3E.a{fill:%23333}.b{opacity:.1}%3C/style%3E%3C/defs%3E%3Cpath class='a' d='M5.272 5.272l2.121 2.121a15 15 0 0 1 21.214 0l2.12-2.12a18 18 0 0 0-25.455 0z'/%3E%3Cpath d='M28.607 28.607A15 15 0 0 1 7.393 7.393l-2.12-2.12a18 18 0 1 0 25.455 0l-2.121 2.12a15 15 0 0 1 0 21.214z' class='b'/%3E%3C/svg%3E");
+}
+
+@keyframes b {
+  0% {
+    transform: rotate(0);
+  }
+
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+
+</style>
+<script src="https://checkout.stripe.com/checkout.js"></script>
+
+
+<!-- Main -->
+  <div id="main" class="wrapper style1">
+    <div class="container">
+      <section>
+        <div class="10u -1u">
+          <header class="major">
+            <h2>Donate to OSM Belgium</h2>
+          </header>
+          <p>INSERT INFO ON WHAT THE DONATION WILL BE USED FOR</p>
+          <p>Please enter the amount you wish to donate in euro below. Clicking donate will open the form allowing you to use your credit or debit card to send the donation.</p>
+          <div class="donation">
+            <span class="currency">€</span>
+            <input id="donateAmount" type="number" name="donateAmount" min="0" step="1" value="10" />
+            <button id="donateButton" class="button--large">Donate</button>
+          </div>
+          <p>Your credit card donation will be processed by Stripe. The charge will appear as "OSM Belgium" on your credit card statement.</p>
+          <div style="clear: both;"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+
+<script>
+var handler = StripeCheckout.configure({
+  key: 'pk_test_9HT0rW4EevV51lMSX45Wv9e4',
+  image: 'https://www.osm.be/assets/images/logo.png',
+  locale: 'auto',
+  token: function(token) {
+    // You can access the token ID with `token.id`.
+    // Get the token ID to your server-side code for use.
+    var data = {
+      stripeToken: token.id,
+      email: token.email,
+      amount: Math.floor($("#donateAmount").val() * 100)
+    }
+
+    $.ajax({
+      type: "POST",
+      url: "https://wt-743bba30b1fe38b39b748e2adf7cc9cb-0.sandbox.auth0-extend.com/osmbe-stripe-payment/payment",
+      data: data,
+      success: function(){
+        alert("Boom we have sent the money!")
+        $('.donation')
+         .html('<strong>Thank you for your donation it has been recieved.</strong>')
+         .removeClass('loading')
+      },
+      error: function(xhr,status,error){
+        alert("ERROR: ", status, error)
+        $('.donation')
+         .html('<strong>Sorry there was an error making your payment, please try again later.</strong>')
+         .removeClass('loading')
+      }
+    });
+  }
+});
+
+
+
+document.getElementById('donateButton').addEventListener('click', function(e) {
+  // Open Checkout with further options:
+  handler.open({
+    name: 'OSM Belgium',
+    description: 'Donate to OSM Belgium',
+    zipCode: true,
+    amount: Math.floor($("#donateAmount").val() * 100),
+    currency: 'EUR'
+  });
+  $('.donation').addClass('loading');
+  e.preventDefault();
+});
+
+// Close Checkout on page navigation:
+window.addEventListener('popstate', function() {
+  handler.close();
+});
+</script>
